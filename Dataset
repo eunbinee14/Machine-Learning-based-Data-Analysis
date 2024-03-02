@@ -1,1 +1,27 @@
+# [1]: Libraries Setting
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
 
+
+# [2]: Data Collection
+df=pd.read_csv("insurance_best.csv")
+
+df.head()
+
+# < 변수 설명 >
+age: 보험자 나이
+
+sex: 보험 계약자 성별, 여성, 남성
+
+bmi: 신체에 대한 이해를 제공하는 체질량 지수, 신장에 비해 상대적으로 높거나 낮은 체중, 신장과 체중의 비율을 이용한 객관적인 체중 지수(kg/m^2), 이상적으로는 18.5~24.9
+
+children: 건강보험이 적용되는 자녀 수
+
+smoker: 흡연
+
+region: 수혜자의 미국 거주 지역, 북동부, 남동부, 남서부, 북서부.
+
+charges: 건강 보험에서 청구하는 개별 의료 비용
