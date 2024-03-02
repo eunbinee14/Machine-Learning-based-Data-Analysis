@@ -1,2 +1,131 @@
 # Modeling
+## [Data Setting] training/test set
+
+
+from sklearn.model_selection import train_test_split
+X = df[numerical_columns]
+y = df['charges']  #의료보험비 예측
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1) 
+## test_size : 검증용 데이터셋의 크기 / random_state : 무작위로 섞을 때 사용되는 시드 값
+
+## X_train : 모델 학습을 위한 feature 데이터셋 & 모델 학습을 위한 데이터셋
+## y_train : label(정답)을 담은 데이터셋 & 모델 학습을 위한 데이터셋
+## X_test : 모델 학습을 위한 feature 데이터셋 & 모델이 학습하지 않은 데이터셋
+## y_test : label(정답)을 담은 데이터셋 & 모델이 학습하지 않은 데이터셋
+
+X_train.shape, y_train.shape
+
+X_test.shape, y_test.shape
+
+## ** 다중공산성 **
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+vif = pd.DataFrame()
+vif['features'] = X_train.columns
+vif["VIF Factor"] = [variance_inflation_factor(X_train.values, i) for i in range(X_train.shape[1])]
+vif.round(3)
+
+# 소수점 3자리까지 해봄
+# VIF > 10면 독립변수간에 상관관계가 높다.
+# 10보다 작기 때문에 유의하다
+
+
+# 모델해석하기
+## 각 feature(독립변수, x) 컬럼에 대한 회귀계수
+from sklearn import linear_model
+
+# fit regression model in training set
+lr = linear_model.LinearRegression()   #linear_model을 가져온다.
+model = lr.fit(X_train, y_train)  #training data를 돌린다. 학습한 데이터 X_train과 결과 y_train을 선형회귀모델에 학습시켜
+## model변수에 넣어준다.
+
+# predict in test set
+pred_test = lr.predict(X_test)  #학습이 끝난 모델에 predict() 메서드를 사용하여 
+## 테스트 데이터셋인 X_test에 대한 예측값인 pred_test를 생성
+
+print(lr.coef_)   #training한 데이터들의 coefficient
+
+coefs = pd.DataFrame(zip(df[numerical_columns].columns, lr.coef_), columns = ['feature', 'coefficients'])  #zip은 묶는 기능 
+coefs    #표 형태로 구성성
+
+#표 형태로 만들어진 것을 절대값 후 (시각화는 안됨) 크기대로 배열
+coefs_new = coefs.reindex(coefs.coefficients.abs().sort_values(ascending=False).index)  #ascending=False :거꾸로해서. 제일 높은 것부터 보여줘
+coefs_new
+
+## 흡연은 의료보험비용 증가에 큰 영향을 끼친다. 
+
+#coefficients 시각화
+
+plt.figure(figsize = (6, 6))
+
+plt.barh(coefs_new['feature'], coefs_new['coefficients'])  #barh : 바 형태의 히스토그램
+plt.title('"feature - coefficient" Graph')
+plt.xlabel('coefficients')
+plt.ylabel('features')
+plt.show()
+
+## smoker의 가중치가 매우 높고, sex의 가중치는 매우 적은 음의 관계에 있다.
+
+
+# [유의성 검정] 을 합니다. 통계에서 변수가 유의
+## 다중 선형 회귀분석 모델
+#training set
+import statsmodels.api as sm 
+
+X_train2 = sm.add_constant(X_train)  #상수항(Intercept)을 추가
+
+### ordinary least square 의 약자로, 거리의 최소값을 기준으로 구하는 함수
+model2 = sm.OLS(y_train, X_train2).fit()   #OLS가 linear regression을 만들어 놓는 이름
+model2.summary()  #결과 데이블 도출 / p-value가 중요
+
+## OLS로 y_train, X_trains2를 돌리고 summary했다.
+
+## r-squrared : 이 모델이 이 문제를 74.7% 풀었어요. 
+## p-value < 0.05 
+
+p-value를 의미합니다. 0.05 보다 작아야 유의
+성별은 0.180으로 0.05보다 크다. 성별은 유의하지 않다.
+< R-squared >
+
+결정계수의 값은 0에서 1 사이에 있으며, 종속 변인과 독립변인 사이에 상관관계가 높을수록 1에 가까워집니다.
+결정계수가 0에 가까운 값을 가지는 회귀모형은 유용성이 낮은 반면, 결정계수의 값이 클수록 회귀모형의 유용성이 높다고 할 수 있습니다.
+
+
+# 모델 해설모델 예측 결과 및 성능 평가
+## 모델의 시각화
+### 학습한 모델을 Test set에 적용하여 y값(“charges”)을 예측
+### 예측 결과 시각화 (test set)
+df = pd.DataFrame({'actual': y_test, 'prediction': pred_test})  #prediciton: pred_test : X_test (모델 돌리지 않은 데이터) 
+## / y_test는 예측 결과
+df = df.sort_values(by='actual').reset_index(drop=True)  #예측 결과를 기준으로 정렬
+df.head()
+
+plt.figure(figsize=(12, 9))
+plt.scatter(df.index, df['prediction'], marker='x', color='darkgreen')  #prediction이 초록엑스 (모델 돌리지 않은 test 데이터, X_test)
+plt.scatter(df.index, df['actual'], alpha=0.3, marker='o', color='black')  #actual이 검정점 (예측 결과, y_test)
+plt.title("Prediction Result in Test Set", fontsize=20)
+plt.legend(['prediction', 'actual'], fontsize=12)
+plt.show()
+
+
+# 모델의 성능 평가 (R squre 와 RMSE)
+### R square - 모델의 예측 정확도를 평가
+print(model.score(X_train, y_train))  # training set / 이게 더 잘 나와야함 
+print(model.score(X_test, y_test))  # test set
+
+## 1에 가까울수록 모델이 데이터를 잘 설명한다.
+## training set이 더 잘 나와야하는데
+## test set 결과가 조금 더 잘 나와서 조정할 필요가 있다.
+
+# RMSE - 평균 제곱근 오차
+from sklearn.metrics import mean_squared_error
+from math import sqrt
+
+pred_train = lr.predict(X_train)
+print(sqrt(mean_squared_error(y_train, pred_train)))  #traing set의 결과 
+
+
+print(sqrt(mean_squared_error(y_test, pred_test)))  #test set의 결과
+
+## traing set RMSE보다 test set RMSE가 낮은 것이 바람직하기 때문에 (2번 째 줄 결과)잘 도출되었다! generalization
 
