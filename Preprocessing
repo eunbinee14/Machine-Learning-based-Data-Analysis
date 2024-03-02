@@ -22,3 +22,14 @@ print(result2)
 
 df["smoker"]=result2
 #흡연자 레코드에 result2 값으로 바꿔주기
+
+
+from sklearn.preprocessing import StandardScaler   #사이킷런
+
+### feature standardization  (numerical_columns except dummy var.-"CHAS")
+
+scaler = StandardScaler()
+scale_columns = ["age","sex","bmi","children","smoker"]
+df[scale_columns] = scaler.fit_transform(df[scale_columns]) 
+
+##scaler(스케일러) : 표준화 / -1과 1 사이
