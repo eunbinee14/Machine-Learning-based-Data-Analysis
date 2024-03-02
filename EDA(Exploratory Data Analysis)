@@ -1,0 +1,23 @@
+sns.set_style('darkgrid')
+df.shape   #1338행 7열
+
+
+# [3.1]: 데이터셋 기본 정보
+df.isnull().sum()  #결측치 확인
+df.info()   #object(문자형 변수) : sex, smoker, region
+df.describe()   #숫자형 변수를 뽑아서 기본 통계
+
+num_region=df['region'].unique()   #unique : 중복 제거 / 같은 부
+print(num_region)
+
+df.duplicated()     #중복되는 데이터가 있는지 확인 메서드
+
+df.loc[df.duplicated()]    #중복되는 데이터 찾아줘. loc(location) : 사람이 읽을 수 있는 라벨 값으로 특정 값들을 골라오는 방법 
+
+display(df.duplicated())
+df = df.drop_duplicates()   #중복 데이터 제거 후 df 변수에 넣어주기
+df.loc[df.duplicated()]  #중복되는 데이터 찾아줘. loc(location) : 사람이 읽을 수 있는 라벨 값으로 특정 값들을 골라오는 방법
+df.shape          #1337행, 1개 행이 삭제 확인
+
+  
+
