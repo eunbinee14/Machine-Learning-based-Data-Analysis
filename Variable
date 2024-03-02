@@ -1,0 +1,103 @@
+# Dependent_Variable
+df["charges"].describe()
+
+df['charges'].hist(bins=50)
+### y축은 frequency 빈도수. x축은 의료보험비용
+### 3000달러즈음에 빈도수가 가장 높다.
+
+plt.boxplot(df['charges'])  #중간값, 분포도를 알 수 있다 = boxplot
+plt.show()  #show를 해야 화면에 볼 수 있다.
+### 3000달러 ~ 18000달러에 분포도가 높고, 35000달러이상 분포도 존재한다.
+
+
+
+# Independent_Variable
+numerical_columns=["age","sex","bmi","children","smoker"]  #region과 charges 제외
+
+fig = plt.figure(figsize = (16, 20))  #화면 캠버스 사이즈를 가로 16, 세로 20
+ax = fig.gca() 
+
+df[numerical_columns].hist(ax=ax)
+plt.show() 
+
+#나이 분포도 
+plt.figure(figsize=(15, 10))
+sns.countplot(x='age', label='Count', data=df, color='skyblue')
+plt.title('Age')
+plt.show()
+
+
+# 독립변수(x) 와 종속변수(y) 간의 관계 탐색
+
+cols=["charges","age","sex","bmi","children","smoker"]   #numberical_columns와 다르게 charges 추가 (독립변수와 종속변수 관계니까)
+
+corr = df[cols].corr(method = 'pearson')  #pearosn(피어슨) : -1에서 1 사이에 있는 값을 나타내주는 통계값. 마이너스에 가까우면 음의 값, 플러스에 가까우면 양의 값
+corr
+
+#heatmap
+fig = plt.figure(figsize = (10, 7))
+ax = fig.gca()
+
+sns.set(font_scale = 1.5)  # heatmap 안의 font-size 설정
+heatmap = sns.heatmap(corr.values, annot = True, fmt='.2f', annot_kws={'size':14},
+                      yticklabels = cols, xticklabels = cols, ax=ax, cmap = "coolwarm") 
+plt.tight_layout()
+
+## 종속변수인 charges와의 관계를 봤을 때, 높은 양의 상관관계에 있는 0.79로 smoker / 높은 음의 상관관계에 있는 없다.. /
+## 가장 낮은 양의 상관관계는 0.06 sex
+## 흡연의 유무는 산점도가 의미 없는 모양으로 그려진다. smoker가 0 또는 1로 이진(binary)형태이기 때문. 그래서 smoker 다음으로 큰 age와 charges의 관계와 그 사이에에 smoker 관계 파악
+
+
+# 독립변수(x) 와 종속변수(y) 간의 관계 ~ age와 charges의 관계
+sns.scatterplot(data=df, x='age', y='charges', markers='o', color='green', alpha=0.6)  #alpha : 투명도
+plt.title('age versus charges')
+plt.show()
+
+# 독립변수(x) 와 종속변수(y) 간의 관계 ~ smoker의 여부에 따른 charges와 age의 관계
+labels = {"0" : 'non-smoker', "1" : 'smoker'}
+sns.scatterplot(data=df, x='age', y='charges', hue='smoker', palette=['green', 'black'])
+plt.title('Insurance Age versus Charges')
+plt.xlabel('Age')
+plt.ylabel('Charges')
+plt.legend(title='', labels=['smoker', 'non-Smoker'],fontsize=10)   #이게 범례, labels로 0,1로 구분했던 (비)흡연자
+#구분을 한 번에 이해하도록 바꿈. fontsize도 조정하여 산점도 결과가 가려지지 않게 함.
+plt.subplots_adjust(bottom=0.02) #산점도 결과가 범례와 겹치지 않도록 범례와 그래프 그림 사이 사이즈 조절함
+plt.show()
+
+## 비흡연자(0,non-smoker)의 의료보험비 시작이 0부터 40000달러 사이에 있는데, 흡연자(1,smoker)의 의료보험비 시작은 18000달러 정도부터 시작된다.
+## 나이를 x로, 의료보험비용을 y로, smoker 그룹 간의 차이를 보고 싶어서 hue 매개변수 이용.
+
+
+# 가장 낮은 양의 상관관계를 나타내는 ~ sex와 charges의 관계
+
+sns.scatterplot(data=df, x='sex', y='charges', markers='o', color='green', alpha=0.6)  #alpha : 투명도
+plt.title('Charges versus Sex')
+plt.show()
+
+## 0 : female, 1 : male
+## female : 0, male : 1 / 그래프 사이에 차이가 거의 없음을 알 수 있다
+
+
+# 지역별 차이 탐색
+df['region'].value_counts()   #주별 의료보험비용 지출자 수
+
+fig = plt.figure(figsize = (6, 10))
+sns.boxplot(x='charges', y='region', data=df) 
+plt.title('region versus charges')
+
+fig = plt.figure(figsize=(6, 10))
+sns.boxplot(x='region', y='charges', hue='smoker', data=df, palette=["#90caf9", "#f48fb1", "#00695c", "#ffc107"])
+handles, _ = plt.gca().get_legend_handles_labels()     
+plt.legend(handles, ['non-smoker', 'smoker'], title='')  #범례 막대 색깔 그대로 유지하면서 범례에 단어 추가   
+plt.show()
+
+fig = plt.figure(figsize = (6, 10))
+sns.boxplot(x='bmi', y='region', data=df)
+plt.title('region versus bmi')
+
+## 지역이 관광지역인지 지방인지에 따라서 접할 수 있는 음식(패스트푸드 etc.), 운동량 등의 차이가 존재할 수 있기 때문에 도시 간의 차이 파악
+
+
+## southeast(남동부)가 의료보험비 지출 건 수도 가장 많았고, bmi의 중앙값도 다른 지역에 비해 높은 것을 확인할 수 있다. 또 지역별 smoker 중 남동부에서 의료보험비용의 최대값이 타 지역에 비해 높게 측정된다. 건강 측면에서 (비슷하지만) 이상적인 범주에서 벗어나고 있다. 이를 종합하면 southeast가 타 부에 비해 보다 높은 의료보험비를 내고 있겠다!
+## ( 실제로 남동부는 전체 미국 기준 위생상태나 소득수준이 낮다고 한다 )
+
