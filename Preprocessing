@@ -1,0 +1,24 @@
+#카테고리형을 숫자형으로 바꿔야 한다. 
+df.info()
+
+
+#object(문자형 변수)인 부분을 숫자형으로 바꿔야한다. 사이킷런
+from sklearn.preprocessing import LabelEncoder
+
+le = LabelEncoder()
+result = le.fit_transform(df["sex"])
+print(result)
+
+#성별을 숫자로 바꾸는 코드
+#0이 female, 1이 male
+
+df["sex"]=result
+#성별 레코드에 result 값으로 바꿔주기 
+
+result2 = le.fit_transform(df["smoker"])
+print(result2)
+
+#1이 yes(smoker), 0이 no(non-smoker)
+
+df["smoker"]=result2
+#흡연자 레코드에 result2 값으로 바꿔주기
